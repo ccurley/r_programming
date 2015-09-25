@@ -1,38 +1,35 @@
 # Week 2, Assignment 2
 #
-# I bet my life there is a better way to do this than loops, but you go with what you know
-# I use two data frames, I bet it can be done in one. Borrowing from pollutantmean.R, I grab
-# the files out of the specdata drive based on the range of inputs taken as args
-#
-# That's the first for loop, and I bet you can do this in one line.
+# Better and less of a kluge than previous versions, but still not ideal.
 # 
-# The second loop then subsets the data in the dataframe to IDs that match the i of the ID.
-# The subset is pushed to newdata vector. The vector is processed for complete cases. I nrow
-# the newdata subsetted for good, and then I spit it out into a new data frame.
+# First not ideal item is that I can't get he sapply to work inside loop to only read in the file pertaining
+# to the ID. 
 #
-# I'm sure this is a total kluge, but all I know are setsets, data frames, and conditionals.
+# Second, I'm still using a for statement, which is not very "r-ish"
+# As a result, I calculate for all files in the directory run the rbind for each i in ID.
+#
+# could be better, but it's a hell of a lot better than my first hideous attempt.
+
 # So, here it is.
 
 complete <- function(directory, id = 1:332) {
         
-       # set up the data frame and get the file names
+        directory = "specdata"
+        id = 17:23
+
+        # set up the data frame and get the file names
         spititout <- data.frame()                               # I should renamed this 'suck it in'
-        wk2_df    <- data.frame()                               # initialize the data frame
         wk2_files <- list.files(directory, full.name=TRUE)      # get the files in the directory arg
+        wk2_rows <- c(1:length(id))                             # create the row labels
         
-        # get a row at a time per id in i and build a dataset, find the complete cases, get a count
-        # of the good rows, and then pass the ID for the row and the nrow count into a new data frame
-        #
-        # I bet there's a more efficient way to get and count the complete cases.
-        for (i in seq_along(id)) {
-                wk2_df <- rbind(wk2_df, read.csv(wk2_files[i])) # read in just ID sequence to d.f.
-                # good <- wk2_df(!is.na[wk2_df$sulfate] & wk2_df(!is.na[wk2_df$nitrate]))
-                good <-complete.cases(wk2_df)                   # which are complete, e.g. 'good'
-                # out <- nrow(good)
-                out <- nrow(wk2_df[good, ])                     # now count the rows that are 'good'
-                spititout = rbind(spititout, data.frame(id = i, nobs = out))
+        # This will give us a count of the complete cases in the complete cases in the dir
+        # into a vector containing named ints.
+        out <- sapply(wk2_files, function(f) sum(complete.cases(read.csv(f))))
+        
+        # create a df with row names, id, and number of observatons corresponding to the input range
+        for (i in id) {
+                spititout <- rbind(spititout, data.frame(id = i, nobs = out[i], row.names = wk2_rows[1]))
         }
         
-        # It's all in the name.
         spititout
 }
